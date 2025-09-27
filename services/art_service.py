@@ -1,27 +1,30 @@
+from sqlalchemy.orm import Session
 from models.art import Art
+from config.database import SessionLocal
 
-# "Base de datos" tempporal en memoria
-arts_db = []
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-def get_arts():
-    return arts_db
+def get_arts(db: Session):
+    return db.query(Art).all()
 
-def get_art_by_id(art_id: int):
-    return next((art for art in arts_db if art.id == art_id), None)
+def get_art_by_id(db: Session, art_id: int):
+    return db.query(Art).filter(Art.id == art_id).first()
 
-def cretae_art(art: Art):
-    arts_db.append(art)
+def create_art(db: Session, art: Art):
+    db.add(art)
+    db.commit()
+    db.refresh(art)
     return art
 
-def update_art(art_id: int, updated_art: Art):
-    for i, art in enumerate(arts_db):
-        if art.id == art_id:
-            arts_db[i] = updated_art
-            return updated_art
-    return None
+def delete_art(db: Session, art_id: int):
+    art = db.query(Art).filter(Art.id == art_id).first()
+    if art:
+        db.delete(art)
+        db.commit()
+    return art
 
-def delete_art(art_id: int):
-    for i, art in enumerate(arts_db):
-        if art.id == art_id:
-            return arts_db.pop(i)
-    return None
