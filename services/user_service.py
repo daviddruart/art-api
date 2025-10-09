@@ -4,17 +4,16 @@ from passlib.context import CryptContext
 from models.user import User
 from config.auth import create_access_token
 
-# Configuración para encriptar contraseñas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# ---- Funciones utilitarias ----
 def get_password_hash(password: str):
+    # 🔒 asegurarse de que sea string y corto
+    password = str(password)[:72]
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str):
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(str(plain_password)[:72], hashed_password)
 
-# ---- CRUD y autenticación ----
 def create_user(db: Session, username: str, email: str, password: str):
     hashed_password = get_password_hash(password)
     user = User(username=username, email=email, password_hash=hashed_password)
