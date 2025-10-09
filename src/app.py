@@ -1,18 +1,13 @@
-# src/app.py
 from fastapi import FastAPI
 from config.database import Base, engine
-from controllers import users_controller
-import models.user  # asegúrate de importar para crear la tabla
+from controllers import users_controller, art_controller
+import models.user  # 👈 este import es clave
 
-# Crear la app
 app = FastAPI(title="Art API - ArCook")
 
-# Crear las tablas en la base de datos
+# Crear las tablas
 Base.metadata.create_all(bind=engine)
 
-# Incluir los routers
+# Incluir routers
 app.include_router(users_controller.router)
-
-@app.get("/")
-def root():
-    return {"message": "Bienvenido a la API de Arte - Rama ArCook 🎨"}
+app.include_router(art_controller.router)
