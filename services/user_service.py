@@ -7,7 +7,7 @@ from config.auth import create_access_token
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str):
-    # 🔒 asegurarse de que sea string y corto
+  
     password = str(password)[:72]
     return pwd_context.hash(password)
 
