@@ -1,92 +1,189 @@
-#  Art API
+# ArCook API — FastAPI + SQLite + JWT
 
-API RESTful construida con **FastAPI** y **SQLite** para la gestión de obras de arte.  
-Este proyecto fue desarrollado desde cero en **GitHub Codespaces**, siguiendo buenas prácticas con **SQLAlchemy** y **Pydantic**.
+## Descripción general
+ArCook es una versión extendida del proyecto original `art-api`, desarrollada en la rama `ArCook`.  
+Su objetivo es ofrecer una API robusta para la gestión de obras de arte con autenticación de usuarios mediante JWT y almacenamiento en SQLite.  
 
----
-
-##  Características
-- CRUD completo de obras de arte:
-  - Crear (`POST /arts/`)
-  - Listar (`GET /arts/`)
-  - Obtener por ID (`GET /arts/{id}`)
-  - Actualizar (`PUT /arts/{id}`)
-  - Eliminar (`DELETE /arts/{id}`)
-- Base de datos persistente con **SQLite** (`arts.db`).
-- Validación de datos con **Pydantic** (schemas).
-- Documentación automática con **Swagger UI** (`/docs`) y **ReDoc** (`/redoc`).
+La arquitectura sigue una estructura profesional con separación en controllers, services, schemas, models y config.
 
 ---
 
-##  Tecnologías utilizadas
-- [FastAPI](https://fastapi.tiangolo.com/) – framework web rápido y moderno.
-- [Uvicorn](https://www.uvicorn.org/) – servidor ASGI.
-- [SQLAlchemy](https://www.sqlalchemy.org/) – ORM para manejar la base de datos.
-- [SQLite](https://www.sqlite.org/) – base de datos ligera.
-- [Pydantic](https://docs.pydantic.dev/) – validación de datos.
+## Estructura del proyecto
+
+```
+art-api/
+│
+├── src/
+│   └── app.py
+│
+├── config/
+│   ├── auth.py
+│   ├── database.py
+│   └── dependencies.py
+│
+├── controllers/
+│   ├── users_controller.py
+│   └── art_controller.py
+│
+├── models/
+│   ├── user.py
+│   └── art.py
+│
+├── schemas/
+│   ├── user_schema.py
+│   └── art_schema.py
+│
+├── services/
+│   ├── user_service.py
+│   └── art_service.py
+│
+├── artcook.db
+├── requirements.txt
+└── README.md
+```
 
 ---
 
-##  Estructura del proyecto
-    art-api/
-    ├── config/ # Configuración de la base de datos
-    │ └── database.py
-    ├── controllers/ # Rutas / endpoints de la API
-    │ └── art_controller.py
-    ├── models/ # Modelos de la base de datos
-    │ └── art.py
-    ├── schemas/ # Esquemas Pydantic para validación/response
-    │ └── art_schema.py
-    ├── services/ # Lógica de negocio y conexión con la BD
-    │ └── art_service.py
-    ├── src/ # Punto de entrada de la aplicación
-    │ └── app.py
-    ├── requirements.txt # Dependencias del proyecto
-    └── README.md # Este archivo 
-## Crear entorno virtual
-    python -m venv venv
-    venv\Scripts\activate 
-## Instalar dependencias
-    pip install -r requirements.txt
-## Levantar el servidor
-    uvicorn src.app:app --reload --host 0.0.0.0 --port 8000
-El servidor se ejecutará en:
- http://localhost:8000 (local)
- En Codespaces: https://<tu-codespace>-8000.app.github.dev
+## Pasos implementados en la rama `ArCook`
 
-# Ejemplos de uso (curl)
-## Crear obra
-    curl -X POST "http://localhost:8000/arts/" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "title":"La noche estrellada",
-        "artist":"Vincent van Gogh",
-        "year":1889,
-        "style":"Postimpresionismo",
-        "description":"Óleo sobre lienzo"
-      }'
-## Lista de obras
-    curl "http://localhost:8000/arts/"
-## Obtener obras por ID
-    curl "http://localhost:8000/arts/1"
-## Actualizar obra
-    curl -X PUT "http://localhost:8000/arts/1" \
-      -H "Content-Type: application/json" \
-      -d '{"style":"Postimpresionismo - actualizado", "year":1890}'
-## Eliminar obra
-    curl -X DELETE "http://localhoost:8000/arts/1"
+### 1. Creación de la rama
+Desde Codespaces:
+```bash
+git checkout main
+git pull origin main
+git checkout -b ArCook
+```
 
+### 2. Instalación de dependencias
+```bash
+pip install fastapi uvicorn sqlalchemy pydantic passlib[bcrypt] python-jose[cryptography] python-dotenv email-validator
+pip freeze > requirements.txt
+```
 
+### 3. Autenticación con JWT — `config/auth.py`
+Se creó un sistema JWT para emisión y verificación de tokens.
 
-## Próximos pasos / mejoras
+### 4. Base de datos — `config/database.py`
+Configuración de conexión con SQLite, con función `get_db()` para las sesiones de SQLAlchemy.
 
-- Agregar autenticación de usuarios.
+### 5. Modelo de usuario — `models/user.py`
+Define el modelo `User` con los campos:
+- id, username, email, password_hash, is_active
 
-- Migrar la base de datos a MySQL o PostgreSQL.
+### 6. Esquemas de usuario — `schemas/user_schema.py`
+Define los modelos Pydantic para:
+- Registro (UserCreate)
+- Login (UserLogin)
+- Respuesta (UserOut)
 
-- Crear un frontend en React que consuma esta API.
+### 7. Lógica de usuario — `services/user_service.py`
+Implementación de:
+- Hashing con bcrypt
+- Validación de contraseñas
+- Creación y autenticación de usuarios
+- Generación de token JWT
 
-- Poblar con dataset de obras de usuarios.
+### 8. Controlador de usuarios — `controllers/users_controller.py`
+Endpoints creados:
+- POST /users/register → Registrar usuario  
+- POST /users/login → Iniciar sesión y obtener token JWT
 
+### 9. Esquemas de arte — `schemas/art_schema.py`
+Define los modelos:
+- ArtCreate, ArtUpdate, ArtResponse
 
+### 10. Dependencias — `config/dependencies.py`
+Función get_current_user() para proteger rutas mediante token JWT.
 
+### 11. Controlador de arte — `controllers/art_controller.py`
+CRUD completo de obras de arte:
+- GET /arts → público  
+- GET /arts/{id} → público  
+- POST /arts → protegido con token  
+- PUT /arts/{id} → protegido  
+- DELETE /arts/{id} → protegido  
+
+Integración de:
+```python
+current_user: User = Depends(get_current_user)
+```
+
+### 12. Integración en `src/app.py`
+Registro de routers y creación automática de tablas:
+```python
+from config.database import Base, engine
+from controllers import users_controller, art_controller
+import models.user
+
+Base.metadata.create_all(bind=engine)
+app.include_router(users_controller.router)
+app.include_router(art_controller.router)
+```
+
+### 13. Solución de errores encontrados
+
+| Error | Causa | Solución |
+|-------|--------|----------|
+| ModuleNotFoundError: No module named 'schemas.art_schema' | Faltaba archivo `art_schema.py` | Se creó el esquema completo |
+| ValueError: password cannot be longer than 72 bytes | Incompatibilidad de bcrypt | Se reinstaló bcrypt==4.0.1 y passlib==1.7.4 |
+| 500 Internal Server Error | Tabla `users` no creada | Se importó `models.user` en `src/app.py` |
+| 404 Not Found | Swagger abierto fuera del puerto 8000 | Se usó correctamente `https://<codespace>-8000.app.github.dev/docs` |
+
+### 14. Verificación final
+
+1. Registro de usuario (POST /users/register):
+```json
+{
+  "username": "artlover",
+  "email": "artlover@example.com",
+  "password": "123456"
+}
+```
+
+2. Login (POST /users/login):
+```json
+{
+  "username": "artlover",
+  "password": "123456"
+}
+```
+Respuesta:
+```json
+{
+  "access_token": "<TOKEN>",
+  "token_type": "bearer"
+}
+```
+
+3. En Swagger, usar el botón Authorize y pegar:
+```
+Bearer <TOKEN>
+```
+
+4. Endpoints de arte (requieren token para POST/PUT/DELETE).
+
+---
+
+## Requisitos mínimos
+- Python 3.10+
+- FastAPI 0.110+
+- SQLite 3.x
+- GitHub Codespaces (o entorno local con VSCode)
+
+---
+
+## Ejecución
+
+```bash
+uvicorn src.app:app --reload --host 0.0.0.0 --port 8000
+```
+
+Abrir en navegador:
+```
+https://<tu-codespace>-8000.app.github.dev/docs
+```
+
+---
+
+## Licencia
+Proyecto desarrollado por Cristian David Rincón Urrea como extensión educativa y experimental de `art-api`, bajo fines de aprendizaje y desarrollo profesional.
